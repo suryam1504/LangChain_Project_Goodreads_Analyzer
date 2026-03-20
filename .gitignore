@@ -1,0 +1,23 @@
+# Ignore virtual environment
+langvenv/
+
+# Ignore environment variables
+.env
+
+# Ignore common Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# VS Code
+.vscode/
+
+# Chroma vector store data
+chroma_db/
+
+# Streamlit cache
+.streamlit/
+
+# OS files
+.DS_Store
+Thumbs.db
