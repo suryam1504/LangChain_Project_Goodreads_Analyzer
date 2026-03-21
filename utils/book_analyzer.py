@@ -165,11 +165,11 @@ str_parser = StrOutputParser()
 
 # ── One LLM per task — spreads load across model rate limit buckets ──
 # Model limits: TPM / TPD
-llm_summary         = get_llm(model="openai/gpt-oss-20b")                         # 8K TPM  / 200K TPD — analytical
-llm_genre           = get_llm(model="llama-3.1-8b-instant")                       # 6K TPM  / 500K TPD — fast, structured output
-llm_personality     = get_llm(model="moonshotai/kimi-k2-instruct")                # 10K TPM / 300K TPD — creative, witty
-llm_recommendations = get_llm(model="qwen/qwen3-32b")                             # 6K TPM  / 500K TPD — strong reasoning, book knowledge
-llm_reviews         = get_llm(model="meta-llama/llama-4-scout-17b-16e-instruct")  # 30K TPM / 500K TPD — highest TPM, handles large review payloads
+llm_summary         = get_llm(model="llama-3.3-70b-versatile",                    max_tokens=1024)  # 8K TPM  / 200K TPD — analytical
+llm_genre           = get_llm(model="llama-3.1-8b-instant",                       max_tokens=2048)  # 6K TPM  / 500K TPD — needs room for full JSON
+llm_personality     = get_llm(model="moonshotai/kimi-k2-instruct",                max_tokens=1024)  # 10K TPM / 300K TPD — creative, witty
+llm_recommendations = get_llm(model="qwen/qwen3-32b",                             max_tokens=1500)  # 6K TPM  / 500K TPD — strong reasoning, book knowledge
+llm_reviews         = get_llm(model="meta-llama/llama-4-scout-17b-16e-instruct",  max_tokens=1500)  # 30K TPM / 500K TPD — highest TPM, handles large review payloads
 
 # ── Pydantic models ──────────────────────────────────────────
 
@@ -283,3 +283,4 @@ def get_review_analysis(books_with_reviews: list) -> ReviewAnalysis:
         "format_instructions": parser.get_format_instructions()
     })
 
+print(2+2)

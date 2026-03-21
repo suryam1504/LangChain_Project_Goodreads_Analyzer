@@ -2,32 +2,34 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import traceback
 import streamlit as st
+from langchain_core.exceptions import OutputParserException
 from utils.book_analyzer import fetch_user_books, get_reading_summary, get_genre_analysis, get_personality_card, get_recommendations, get_review_analysis
 
 # ── Cached wrappers (ttl=1 hour) ─────────────────────────────
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, show_spinner=False)
 def cached_fetch_user_books(gr_id: int):
     return fetch_user_books(gr_id)
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, show_spinner=False)
 def cached_reading_summary(books_tuple: tuple, num_read: int, currently_reading: tuple, style: str, length: str):
     return get_reading_summary(list(books_tuple), num_read, list(currently_reading), style=style, length=length)
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, show_spinner=False)
 def cached_personality_card(books_tuple: tuple):
     return get_personality_card(list(books_tuple)).model_dump()
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, show_spinner=False)
 def cached_genre_analysis(books_tuple: tuple):
     result = get_genre_analysis(list(books_tuple))
     return [g.model_dump() for g in result.genres]
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, show_spinner=False)
 def cached_review_analysis(reviews_tuple: tuple):
     return get_review_analysis(list(reviews_tuple)).model_dump()
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, show_spinner=False)
 def cached_recommendations(books_tuple: tuple):
     result = get_recommendations(list(books_tuple))
     return [r.model_dump() for r in result.recommendations]
@@ -73,6 +75,8 @@ if st.button("Analyze", type="primary"):
 
         # Only re-fetch if the user ID changed
         if st.session_state.get("gr_id") != gr_id:
+            for key in ["personality", "genre_result", "review", "recs"]:
+                st.session_state.pop(key, None)
             with st.spinner("Fetching your books..."):
                 st.session_state.user_data = cached_fetch_user_books(gr_id)
             st.session_state.gr_id = gr_id
@@ -90,24 +94,32 @@ if user_data:
         st.write(f"**Books with reviews:** {len(user_data['books_with_reviews'])}")
 
     # ── Reading Summary ───────────────────────────────────
-    with st.spinner("Generating your reader summary..."):
-        summary = cached_reading_summary(
-            tuple(user_data["read_titles"]),
-            user_data["num_read_books"],
-            tuple(user_data["currently_reading_titles"]),
-            style=STYLE_PROMPTS[style],
-            length=length
-        )
-    st.subheader("🎭 Your Reader Summary")
-    st.write(summary)
+    try:
+        with st.spinner("Generating your reader summary..."):
+            summary = cached_reading_summary(
+                tuple(user_data["read_titles"]),
+                user_data["num_read_books"],
+                tuple(user_data["currently_reading_titles"]),
+                style=STYLE_PROMPTS[style],
+                length=length
+            )
+        st.subheader("🎭 Your Reader Summary")
+        st.write(summary)
+    except OutputParserException:
+        traceback.print_exc()
+        st.error("Parsing error generating summary — try again.")
 
     st.divider()
 
     # ── Personality Card ──────────────────────────────────
     st.subheader("🧠 Your Reader Personality")
     if st.button("Generate Personality Card"):
-        with st.spinner("Generating your reader personality..."):
-            st.session_state.personality = cached_personality_card(tuple(user_data["read_titles"]))
+        try:
+            with st.spinner("Generating your reader personality..."):
+                st.session_state.personality = cached_personality_card(tuple(user_data["read_titles"]))
+        except OutputParserException:
+            traceback.print_exc()
+            st.error("Parsing error — try again.")
 
     if st.session_state.get("personality"):
         personality = st.session_state.personality
@@ -128,8 +140,12 @@ if user_data:
     # ── Genre Analysis ────────────────────────────────────
     st.subheader("📊 Your Top Genres")
     if st.button("Analyse My Genres"):
-        with st.spinner("Analysing your genres..."):
-            st.session_state.genre_result = cached_genre_analysis(tuple(user_data["read_titles"]))
+        try:
+            with st.spinner("Analysing your genres..."):
+                st.session_state.genre_result = cached_genre_analysis(tuple(user_data["read_titles"]))
+        except OutputParserException:
+            traceback.print_exc()
+            st.error("Parsing error — try again.")
 
     if st.session_state.get("genre_result"):
         for genre in st.session_state.genre_result:
@@ -144,21 +160,29 @@ if user_data:
     if user_data["books_with_reviews"]:
         st.subheader("📝 What Your Reviews Reveal")
         if st.button("Analyse My Reviews"):
-            with st.spinner("Analysing your reviews..."):
-                st.session_state.review = cached_review_analysis(tuple(frozenset(b.items()) for b in user_data["books_with_reviews"]))
+            try:
+                with st.spinner("Analysing your reviews..."):
+                    st.session_state.review = cached_review_analysis(tuple(frozenset(b.items()) for b in user_data["books_with_reviews"]))
+            except OutputParserException:
+                traceback.print_exc()
+                st.error("Parsing error — try again.")
 
         if st.session_state.get("review"):
             review = st.session_state.review
             st.markdown(f"**{review['reviewer_type']}**")
-            col_c, col_d = st.columns(2)
-            with col_c:
+            row1_c, row1_d = st.columns(2)
+            with row1_c:
                 st.markdown("**Rating Style**")
                 st.write(review['rating_style'])
-                st.markdown("**Review Voice**")
-                st.write(review['review_personality'])
-            with col_d:
+            with row1_d:
                 st.markdown("**Most Enthusiastic About**")
                 st.write(review['most_enthusiastic_about'])
+
+            row2_c, row2_d = st.columns(2)
+            with row2_c:
+                st.markdown("**Review Voice**")
+                st.write(review['review_personality'])
+            with row2_d:
                 st.markdown("**Most Critical About**")
                 st.write(review['most_critical_about'])
             st.info(f"🔍 Hidden Pattern: *{review['hidden_pattern']}*")
@@ -168,8 +192,12 @@ if user_data:
     # ── Recommendations ───────────────────────────────────
     st.subheader("🔮 What to Read Next")
     if st.button("Recommend Me Books"):
-        with st.spinner("Finding your next reads..."):
-            st.session_state.recs = cached_recommendations(tuple(user_data["read_titles"]))
+        try:
+            with st.spinner("Finding your next reads..."):
+                st.session_state.recs = cached_recommendations(tuple(user_data["read_titles"]))
+        except OutputParserException:
+            traceback.print_exc()
+            st.error("Parsing error — try again.")
 
     if st.session_state.get("recs"):
         for rec in st.session_state.recs:

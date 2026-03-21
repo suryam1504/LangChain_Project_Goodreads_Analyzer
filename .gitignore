@@ -21,3 +21,5 @@ chroma_db/
 # OS files
 .DS_Store
 Thumbs.db
+
+/testing_nbs

@@ -15,6 +15,7 @@ Rules:
 - Generate your response such that you are directly talking to the reader, using "you" statements, and avoid using first person "I" statements about yourself
 - Sound like a person, not a report
 - DO NOT use very heavy literary jargon - keep it accessible and fun
+- Don't lie or make up facts, if a reader has only read 4 books, you can acknowledge that and say something like "You may be an emerging reader"
 - Be specific — mention actual authors and books from their list, don't be generic
 - Subtly touch on: authors they gravitate toward, book lengths, time periods/eras, 
   mood patterns, and lightly on genre without making it the focus
