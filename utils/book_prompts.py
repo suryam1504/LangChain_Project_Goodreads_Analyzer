@@ -76,6 +76,7 @@ recommendation_prompt = ChatPromptTemplate([
     ("human", """Based on this reading list, recommend 5 books this person would love.
     Do not recommend any book already in their list.
     Reference specific books from their list when explaining your reasoning.
+    This reader's top genres are: {top_genres} — use this to make recommendations more targeted.
     
     Reading list:
     {books}""")

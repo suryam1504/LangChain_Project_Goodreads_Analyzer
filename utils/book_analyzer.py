@@ -157,6 +157,7 @@ from utils.llm import get_llm
 from utils.piratetreads import get_all_books
 from utils.book_prompts import reading_summary_prompt, genre_analysis_prompt, personality_prompt, recommendation_prompt, review_prompt
 from langchain_core.output_parsers import StrOutputParser, PydanticOutputParser
+from langchain_core.runnables import RunnableParallel, RunnableLambda
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -266,13 +267,47 @@ def get_personality_card(read_titles: list) -> PersonalityCard:
         "format_instructions": parser.get_format_instructions()
     })
 
+def get_genre_and_personality(read_titles: list) -> dict:
+    """Run genre analysis and personality card in parallel via RunnableParallel.
+    Returns dict with 'genres' (GenreOutput) and 'personality' (PersonalityCard).
+    """
+    genre_parser = PydanticOutputParser(pydantic_object=GenreOutput)
+    personality_parser = PydanticOutputParser(pydantic_object=PersonalityCard)
+
+    genre_chain = (
+        RunnableLambda(lambda x: {"books": x["books"], "format_instructions": genre_parser.get_format_instructions()})
+        | genre_analysis_prompt | llm_genre | genre_parser
+    )
+    personality_chain = (
+        RunnableLambda(lambda x: {"books": x["books"], "format_instructions": personality_parser.get_format_instructions()})
+        | personality_prompt | llm_personality | personality_parser
+    )
+
+    parallel_chain = RunnableParallel(genres=genre_chain, personality=personality_chain)
+    return parallel_chain.invoke({"books": read_titles})
+
 def get_recommendations(read_titles: list) -> RecommendationOutput:
-    parser = PydanticOutputParser(pydantic_object=RecommendationOutput)
-    chain = recommendation_prompt | llm_recommendations | parser
-    return chain.invoke({
-        "books": read_titles,
-        "format_instructions": parser.get_format_instructions()
-    })
+    """Genre → Recommendations sequential chain.
+    First identifies top genres, then uses them to give more targeted recommendations.
+    """
+    genre_parser = PydanticOutputParser(pydantic_object=GenreOutput)
+    rec_parser = PydanticOutputParser(pydantic_object=RecommendationOutput)
+
+    genre_chain = (
+        RunnableLambda(lambda x: {"books": x["books"], "format_instructions": genre_parser.get_format_instructions()})
+        | genre_analysis_prompt | llm_genre | genre_parser
+    )
+
+    def build_rec_input(genre_output: GenreOutput) -> dict:
+        top_genres = ", ".join([g.genre for g in genre_output.genres])
+        return {
+            "books": read_titles,
+            "top_genres": top_genres,
+            "format_instructions": rec_parser.get_format_instructions()
+        }
+
+    sequential_chain = genre_chain | RunnableLambda(build_rec_input) | recommendation_prompt | llm_recommendations | rec_parser
+    return sequential_chain.invoke({"books": read_titles})
 
 def get_review_analysis(books_with_reviews: list) -> ReviewAnalysis:
     parser = PydanticOutputParser(pydantic_object=ReviewAnalysis)
@@ -282,5 +317,3 @@ def get_review_analysis(books_with_reviews: list) -> ReviewAnalysis:
         "books_with_reviews": books_with_reviews[:max_books],
         "format_instructions": parser.get_format_instructions()
     })
-
-print(2+2)
