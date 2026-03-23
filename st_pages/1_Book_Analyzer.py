@@ -200,3 +200,63 @@ if user_data:
                 st.caption(f"Similar to: {rec['similar_to']}")
 
 
+# ── Floating Chat Widget (always rendered, fixed lower-right) ─
+if "chat_open" not in st.session_state:
+    st.session_state.chat_open = False
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+st.markdown("""
+<style>
+[data-testid="element-container"]:has(#chat-float-anchor) + div {
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    width: 360px !important;
+    z-index: 1000 !important;
+    background: var(--default-backgroundColor) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18) !important;
+}
+</style>
+<div id="chat-float-anchor"></div>
+""", unsafe_allow_html=True)
+
+with st.container(border=True):
+    header_col, toggle_col = st.columns([5, 1])
+    with header_col:
+        st.markdown("**💬 Book Chat**")
+    with toggle_col:
+        icon = "✕" if st.session_state.chat_open else "▲"
+        if st.button(icon, key="chat_toggle"):
+            st.session_state.chat_open = not st.session_state.chat_open
+            st.rerun()
+
+    if st.session_state.chat_open:
+        _user_data = st.session_state.get("user_data")
+        if not _user_data:
+            st.caption("Load a Goodreads profile first to chat about your books.")
+        else:
+            with st.container(height=260, border=False):
+                if not st.session_state.chat_history:
+                    st.caption("💡 Ask me anything about your reading history!")
+                for msg in st.session_state.chat_history:
+                    with st.chat_message(msg["role"]):
+                        st.write(msg["content"])
+
+            inp_col, btn_col = st.columns([5, 1])
+            with inp_col:
+                user_msg = st.text_input(
+                    "", placeholder="Ask about your books…",
+                    key="float_chat_input", label_visibility="collapsed"
+                )
+            with btn_col:
+                send_clicked = st.button("➤", key="float_chat_send")
+
+            if send_clicked and user_msg.strip():
+                history_so_far = st.session_state.chat_history.copy()
+                st.session_state.chat_history.append({"role": "user", "content": user_msg})
+                with st.spinner("..."):
+                    response = get_chat_response(user_msg, history_so_far, _user_data)
+                st.session_state.chat_history.append({"role": "assistant", "content": response})
+                st.rerun()
