@@ -6,6 +6,7 @@ import traceback
 import streamlit as st
 from langchain_core.exceptions import OutputParserException
 from utils.book_analyzer import fetch_user_books, get_reading_summary, get_genre_and_personality, get_recommendations, get_review_analysis
+from utils.book_chat import get_chat_response
 
 # ── Cached wrappers (ttl=1 hour) ─────────────────────────────
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -75,7 +76,7 @@ if st.button("Analyze", type="primary"):
 
         # Only re-fetch if the user ID changed
         if st.session_state.get("gr_id") != gr_id:
-            for key in ["personality", "genre_result", "review", "recs"]:
+            for key in ["personality", "genre_result", "review", "recs", "chat_history"]:
                 st.session_state.pop(key, None)
             with st.spinner("Fetching your books..."):
                 st.session_state.user_data = cached_fetch_user_books(gr_id)
