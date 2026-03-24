@@ -3,13 +3,13 @@ from utils.llm import get_llm
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 # Three high-TPM models in priority order — cycled on RateLimitError
-# llama-3.3-70b: 6K TPM / gemma2-9b: 15K TPM / llama-3.1-8b: 6K TPM
+# llama-3.3-70b: 6K TPM / llama-4-scout: 30K TPM / llama-3.1-8b: 6K TPM
 _CHAT_MODELS = [
     "llama-3.3-70b-versatile",
-    "gemma2-9b-it",
+    "meta-llama/llama-4-scout-17b-16e-instruct",
     "llama-3.1-8b-instant",
 ]
-_chat_llms = [get_llm(model=m, temperature=0.7, max_tokens=1024) for m in _CHAT_MODELS]
+_chat_llms = [get_llm(model=m, temperature=0.7, max_tokens=512) for m in _CHAT_MODELS]
 
 
 def _build_system_prompt(user_data: dict) -> str:
@@ -20,7 +20,7 @@ def _build_system_prompt(user_data: dict) -> str:
         f"Total books read: {user_data['num_read_books']}",
         f"Currently reading: {', '.join(user_data['currently_reading_titles']) or 'nothing currently'}",
         "",
-        "Full reading list (Title | Author | User Rating | Avg Rating | Review excerpt):",
+        "Full reading list (Title | Author | User Rating | Avg Rating | Review excerpt):", 
     ]
 
     for b in read_books:

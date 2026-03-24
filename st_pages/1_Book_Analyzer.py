@@ -35,9 +35,11 @@ def cached_recommendations(books_tuple: tuple):
     result = get_recommendations(list(books_tuple))
     return [r.model_dump() for r in result.recommendations]
 
-st.set_page_config(page_title="Book Analyzer", page_icon="📚")
+st.set_page_config(page_title="Book Analyzer", page_icon="📚", initial_sidebar_state="expanded")
+
 st.title("📚 Book Analyzer")
 st.caption("Enter a Goodreads profile link to analyze your reading personality.")
+st.caption("If you don't have one and are just trying out this website, you can use this sample profile: https://www.goodreads.com/user/show/142334643-suryam-gupta")
 
 gr_link = st.text_input("Goodreads Profile Link", placeholder="https://www.goodreads.com/user/show/142334643-suryam-gupta")
 
@@ -205,7 +207,7 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
 with st.sidebar:
-    st.markdown("### 💬 Book Chat")
+    st.markdown("### 💬 Book Bot")
     _user_data = st.session_state.get("user_data")
     if not _user_data:
         st.caption("Load a Goodreads profile first.")
@@ -215,24 +217,19 @@ with st.sidebar:
         with st.container(height=400, border=False):
             if not st.session_state.chat_history:
                 st.caption("💡 Ask me anything about your reading history!")
+                st.caption("*Try asking:*")
+                st.caption("• Which books did I give 5 stars?")
+                st.caption("• Who is my most-read author?")
+                st.caption("• What did I write in my review of [book]?")
             for msg in st.session_state.chat_history:
                 with st.chat_message(msg["role"]):
                     st.write(msg["content"])
-
-        inp_col, btn_col = st.columns([5, 1])
-        with inp_col:
-            user_msg = st.text_input(
-                "", placeholder="Ask about your books…",
-                key="sidebar_chat_input", label_visibility="collapsed"
-            )
-        with btn_col:
-            send_clicked = st.button("➤", key="sidebar_chat_send")
 
         if st.button("🗑️ Clear", key="chat_clear"):
             st.session_state.chat_history = []
             st.rerun()
 
-        if send_clicked and user_msg.strip():
+        if user_msg := st.chat_input("Ask about your books…", key="sidebar_chat_input"):
             history_so_far = st.session_state.chat_history.copy()
             st.session_state.chat_history.append({"role": "user", "content": user_msg})
             with st.spinner("..."):
