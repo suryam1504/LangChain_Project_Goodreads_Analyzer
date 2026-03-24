@@ -131,8 +131,8 @@ Each task uses a separate model to spread across Groq's per-model rate limit buc
 
 ```bash
 # 1. Clone and create venv
-git clone https://github.com/suryam1504/LangChain_Project.git
-cd LangChain_Project
+git clone https://github.com/suryam1504/LangChain_Project_Goodreads_Analyzer.git
+cd LangChain_Project_Goodreads_Analyzer
 python3.11 -m venv langvenv
 source langvenv/bin/activate
 
