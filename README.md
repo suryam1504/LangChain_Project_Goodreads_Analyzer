@@ -2,6 +2,8 @@
 
 A **LangChain-powered** Streamlit web app that takes any public Goodreads profile and produces a deep, AI-generated analysis of the user's reading personality, genre preferences, reviews, and personalised book recommendations — all through structured LLM pipelines. A live chatbot lets users ask questions about their reading history in natural language.
 
+🚀 **[Live App → goodreads-analyzer.streamlit.app](https://goodreads-analyzer.streamlit.app/)**
+
 ---
 
 ## Demo
@@ -101,9 +103,10 @@ Each task uses a separate model to spread across Groq's per-model rate limit buc
 | Task | Model | Why |
 |---|---|---|
 | Summary | `llama-3.3-70b-versatile` | Strong narrative quality |
-| Genre + Personality (parallel) | `llama-4-scout-17b` | 30K TPM — high throughput |
-| Recommendations | `qwen3-32b` | Strong book knowledge |
-| Review Analysis | `llama-4-scout-17b` | Handles large review payloads |
+| Genre (parallel) | `llama-4-scout-17b-16e-instruct` | 30K TPM — high throughput, reliable structured output |
+| Personality (parallel) | `moonshotai/kimi-k2-instruct` | Creative, witty writing |
+| Recommendations | `qwen/qwen3-32b` | Strong reasoning and book knowledge |
+| Review Analysis | `llama-4-scout-17b-16e-instruct` | Handles large review payloads |
 | Chat | `llama-3.3-70b-versatile` → fallback chain | Conversational quality + reliability |
 
 ---
@@ -121,7 +124,8 @@ Each task uses a separate model to spread across Groq's per-model rate limit buc
 │   ├── book_chat.py           # Chatbot backend with model fallback
 │   ├── output_utils.py        # make_safe_parser — thinking-model resilience
 │   └── book_bot.py            # Standalone terminal chatbot (for testing)
-├── .env                       # GROQ_API_KEY (not committed)
+├── .streamlit/
+│   └── secrets.toml           # GROQ_API_KEY (not committed)
 └── requirements.txt
 ```
 
@@ -140,7 +144,8 @@ source langvenv/bin/activate
 pip install -r requirements.txt
 
 # 3. Add your Groq API key
-echo "GROQ_API_KEY=your_key_here" > .env
+mkdir -p .streamlit
+echo 'GROQ_API_KEY = "your_key_here"' > .streamlit/secrets.toml
 
 # 4. Run
 streamlit run st_pages/1_Book_Analyzer.py
