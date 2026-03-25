@@ -19,7 +19,7 @@ Try it with this sample profile:
 
 | Feature | Description |
 |---|---|
-| **Reader Summary** | A witty, personalised narrative of your reading history. Supports multiple styles: Warm & Witty, Baby Talk, Pirate, and Roast Master. |
+| **Reader Summary** | A witty, personalised narrative of your reading history. Supports multiple styles: Warm & Witty, Baby Talk, LinkedIn Update, Pirate, and Roast Master. |
 | **Genre Analysis** | Top 5 genres identified from your reading list, with the books in each genre and a one-line rationale. |
 | **Personality Card** | A reader personality type, description, 4 traits, guilty pleasure, signature author, and a memorable one-liner diagnosis. |
 | **Book Recommendations** | 5 personalised recommendations driven by a **sequential chain**: genre analysis → targeted recommendations. Each rec includes mood, reason, and a similar book from your list. |
