@@ -25,7 +25,7 @@ def _init_llms():
     llm                 = get_llm()
     llm_summary         = get_llm(model="llama-3.3-70b-versatile",                    max_tokens=1024)  # 8K TPM  / 200K TPD — analytical
     llm_genre           = get_llm(model="meta-llama/llama-4-scout-17b-16e-instruct",  max_tokens=3000)  # 30K TPM / 500K TPD — reliable structured output, room for full JSON
-    llm_personality     = get_llm(model="moonshotai/kimi-k2-instruct",                max_tokens=1024)  # 10K TPM / 300K TPD — creative, witty
+    llm_personality     = get_llm(model="openai/gpt-oss-120b",                        max_tokens=1024)  # replacement for decommissioned kimi-k2 — creative, witty
     llm_recommendations = get_llm(model="qwen/qwen3-32b",                             max_tokens=2500)  # 6K TPM  / 500K TPD — strong reasoning, book knowledge
     llm_reviews         = get_llm(model="meta-llama/llama-4-scout-17b-16e-instruct",  max_tokens=1500)  # 30K TPM / 500K TPD — highest TPM, handles large review payloads
 
